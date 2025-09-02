@@ -1,14 +1,19 @@
-import { View, Text } from 'react-native';
 import React from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import {
+  SafeAreaProvider,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
+
+import AppNavigation from './src/navigation/AppNavigation';
 
 const App = () => {
   return (
-    <GestureHandlerRootView>
-      <View>
-        <Text>App</Text>
-      </View>
-    </GestureHandlerRootView>
+    <SafeAreaProvider>
+      <GestureHandlerRootView>
+        <AppNavigation />
+      </GestureHandlerRootView>
+    </SafeAreaProvider>
   );
 };
 
