@@ -12,7 +12,7 @@ import { CommentsListProps } from '../../modal/VideoPlayer';
 
 const CommentsList: React.FC<CommentsListProps> = ({ moveVideoPosition }) => {
   return (
-    <View style={{ flex: 0.9, width: '100%' }}>
+    <View style={styles.commentsListContainer}>
       <View style={styles.commentsContainer}>
         <Text>{texts.comments}</Text>
         <View style={styles.lengthText}>
@@ -24,6 +24,11 @@ const CommentsList: React.FC<CommentsListProps> = ({ moveVideoPosition }) => {
         keyExtractor={item => item.id.toString()}
         showsVerticalScrollIndicator={false}
         style={{ height: '35%' }}
+        ListEmptyComponent={() => (
+          <Text style={{ textAlign: 'center', marginTop: 20 }}>
+            {texts.noComments}
+          </Text>
+        )}
         renderItem={({ item }) => (
           <View style={styles.commentBox}>
             <View style={styles.primaryNameContainer}>

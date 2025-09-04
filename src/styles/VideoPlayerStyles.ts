@@ -27,6 +27,7 @@ export default StyleSheet.create({
     borderBottomRightRadius: 10,
   },
   secondaryControls: { flexDirection: 'row', alignItems: 'center', gap: 25 },
+  commentsListContainer: { flex: 0.9, width: '100%' },
   commentsContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -79,9 +80,41 @@ export default StyleSheet.create({
   commentInputContainer: {
     alignItems: 'flex-start',
     padding: 10,
-    marginTop: 10,
     backgroundColor: colors.whity,
     justifyContent: 'flex-start',
-    flex: 0.4,
+    flex: 0.3,
+  },
+  commentInput: {
+    width: '100%',
+    color: colors.black,
+    fontSize: 16,
+    flex: 1,
+    marginRight: 10,
+  },
+  secondaryInputContainer: { alignItems: 'center', width: '100%' },
+  subThirdContainer: {
+    marginTop: 20,
+    justifyContent: 'space-between',
+    width: '90%',
+  },
+  dropDownContainer: { width: 120, marginBottom: 15 },
+  dropDown: {
+    width: 110,
+    borderWidth: 1,
+    borderColor: colors.gray9d,
+    borderRadius: 5,
+    padding: 5,
+  },
+  renderingContainer: {
+    padding: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  btnContainer: {
+    backgroundColor: colors.darkYellow,
+    paddingVertical: 6,
+    paddingHorizontal: 15,
+    borderRadius: 5,
   },
 });

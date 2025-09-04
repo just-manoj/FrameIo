@@ -1,7 +1,8 @@
-import { View, Image, TextInput, Text } from 'react-native';
+import { View, Image, TextInput, Text, TouchableOpacity } from 'react-native';
 import React from 'react';
 import { Dropdown } from 'react-native-element-dropdown';
 import Octicons from 'react-native-vector-icons/Octicons';
+import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
 
 import styles from '../../styles/VideoPlayerStyles';
 import { texts } from '../../const/Text';
@@ -23,60 +24,64 @@ const CommentInput: React.FC<CommentInputProps> = ({
         <TextInput
           placeholder={texts.writeComment}
           placeholderTextColor={colors.gray}
-          style={{
-            width: '100%',
-          }}
+          style={styles.commentInput}
         />
       </View>
 
-      <View style={[styles.thirdContainer, { marginLeft: 10 }]}>
-        <Dropdown
-          data={totaltimeStamp}
-          maxHeight={150}
-          labelField="label"
-          valueField="value"
-          placeholder="00:01"
-          value={commentData.timestamp}
-          containerStyle={{ width: 120, marginBottom: 15 }}
-          style={{
-            width: 110,
-            margin: 10,
-            borderWidth: 1,
-            borderColor: colors.gray9d,
-            borderRadius: 5,
-            padding: 5,
-          }}
-          dropdownPosition="top"
-          renderItem={item => (
-            <View
-              style={{
-                padding: 10,
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 5,
-              }}
-            >
+      <View style={styles.secondaryInputContainer}>
+        <View style={[styles.thirdContainer, styles.subThirdContainer]}>
+          <Dropdown
+            data={totaltimeStamp}
+            maxHeight={150}
+            labelField="label"
+            valueField="value"
+            placeholder="00:01"
+            value={commentData.timestamp}
+            containerStyle={styles.dropDownContainer}
+            style={styles.dropDown}
+            dropdownPosition="top"
+            renderItem={item => (
+              <View style={styles.renderingContainer}>
+                <Octicons
+                  name="clock"
+                  size={20}
+                  color={colors.gray}
+                  style={{ marginRight: 5 }}
+                />
+                <Text style={{ color: 'black' }}>{item.label}</Text>
+              </View>
+            )}
+            renderLeftIcon={() => (
               <Octicons
                 name="clock"
                 size={20}
                 color={colors.gray}
                 style={{ marginRight: 5 }}
               />
-              <Text style={{ color: 'black' }}>{item.label}</Text>
-            </View>
-          )}
-          renderLeftIcon={() => (
-            <Octicons
-              name="clock"
-              size={20}
+            )}
+            onChange={item => {
+              onChangeCommentHandler('timestamp', item.value);
+            }}
+          />
+          <View style={[styles.thirdContainer, { marginTop: 0 }]}>
+            <FontAwesome6
+              name="pencil"
+              size={25}
               color={colors.gray}
               style={{ marginRight: 5 }}
             />
-          )}
-          onChange={item => {
-            onChangeCommentHandler('timestamp', item.value);
-          }}
-        />
+            <TouchableOpacity
+              style={{
+                backgroundColor: colors.black,
+                width: 25,
+                height: 25,
+              }}
+            />
+          </View>
+          <TouchableOpacity onPress={() => {}} style={styles.btnContainer}>
+            <Text style={{ color: colors.white }}>{texts.comment}</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
