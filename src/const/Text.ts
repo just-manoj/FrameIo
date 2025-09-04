@@ -4,4 +4,7 @@ export const texts = {
   writeComment: 'Write your comment here',
   comment: 'Comment',
   noComments: ' No comments yet. Be the first to comment!',
+  testUser: 'Test user',
+  validation: 'validation',
+  validationMsg: 'You must either add a message or draw something',
 };

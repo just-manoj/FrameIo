@@ -8,26 +8,30 @@ import styles from '../../styles/VideoPlayerStyles';
 import { texts } from '../../const/Text';
 import { colors } from '../../const/Colors';
 import { CommentInputProps } from '../../modal/VideoPlayer';
+import { images } from '../../const/images';
 
 const CommentInput: React.FC<CommentInputProps> = ({
   commentData,
   onChangeCommentHandler,
   totaltimeStamp,
+  addNewComment,
+  drawingData,
+  manageControlsHandler,
+  playerControl,
+  changeDrawingData,
 }) => {
   return (
     <View style={styles.commentInputContainer}>
       <View style={styles.thirdContainer}>
-        <Image
-          source={{ uri: 'https://randomuser.me/api/portraits/men/85.jpg' }}
-          style={styles.image}
-        />
+        <Image source={images.testUser} style={styles.image} />
         <TextInput
           placeholder={texts.writeComment}
           placeholderTextColor={colors.gray}
           style={styles.commentInput}
+          value={commentData.comment}
+          onChangeText={text => onChangeCommentHandler('comment', text)}
         />
       </View>
-
       <View style={styles.secondaryInputContainer}>
         <View style={[styles.thirdContainer, styles.subThirdContainer]}>
           <Dropdown
@@ -35,7 +39,7 @@ const CommentInput: React.FC<CommentInputProps> = ({
             maxHeight={150}
             labelField="label"
             valueField="value"
-            placeholder="00:01"
+            placeholder="00:00"
             value={commentData.timestamp}
             containerStyle={styles.dropDownContainer}
             style={styles.dropDown}
@@ -64,21 +68,104 @@ const CommentInput: React.FC<CommentInputProps> = ({
             }}
           />
           <View style={[styles.thirdContainer, { marginTop: 0 }]}>
-            <FontAwesome6
-              name="pencil"
-              size={25}
-              color={colors.gray}
-              style={{ marginRight: 5 }}
-            />
             <TouchableOpacity
-              style={{
-                backgroundColor: colors.black,
-                width: 25,
-                height: 25,
+              onPress={() => {
+                manageControlsHandler('canDraw', !playerControl.canDraw);
               }}
-            />
+            >
+              {
+                <FontAwesome6
+                  name="pencil"
+                  size={25}
+                  color={playerControl.canDraw ? colors.black : colors.gray}
+                  style={{ marginRight: 5 }}
+                />
+              }
+            </TouchableOpacity>
+            {playerControl.canDraw && (
+              <View style={{ gap: 5 }}>
+                <View
+                  style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}
+                >
+                  <TouchableOpacity
+                    style={[
+                      styles.colorBox,
+                      {
+                        backgroundColor: colors.red,
+                        borderWidth:
+                          drawingData.colorCode === colors.red ? 2 : 0,
+                      },
+                    ]}
+                    onPress={() => changeDrawingData('color', colors.red)}
+                  />
+                  <TouchableOpacity
+                    style={[
+                      styles.colorBox,
+                      {
+                        backgroundColor: colors.green,
+                        borderWidth:
+                          drawingData.colorCode === colors.green ? 2 : 0,
+                      },
+                    ]}
+                    onPress={() => changeDrawingData('color', colors.green)}
+                  />
+                  <TouchableOpacity
+                    style={[
+                      styles.colorBox,
+                      {
+                        backgroundColor: colors.black,
+                        borderWidth:
+                          drawingData.colorCode === colors.black ? 2 : 0,
+                        borderColor: colors.white,
+                      },
+                    ]}
+                    onPress={() => changeDrawingData('color', colors.black)}
+                  />
+                </View>
+
+                <View
+                  style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}
+                >
+                  <TouchableOpacity
+                    style={[
+                      styles.colorBox,
+                      {
+                        backgroundColor: colors.blue,
+                        borderWidth:
+                          drawingData.colorCode === colors.blue ? 2 : 0,
+                      },
+                    ]}
+                    onPress={() => changeDrawingData('color', colors.blue)}
+                  />
+                  <TouchableOpacity
+                    style={[
+                      styles.colorBox,
+                      {
+                        backgroundColor: colors.white,
+                        borderWidth:
+                          drawingData.colorCode === colors.white ? 2 : 0,
+                      },
+                    ]}
+                    onPress={() => changeDrawingData('color', colors.white)}
+                  />
+                  <TouchableOpacity
+                    style={[
+                      styles.colorBox,
+                      {
+                        backgroundColor: colors.darkYellow,
+                        borderWidth:
+                          drawingData.colorCode === colors.darkYellow ? 2 : 0,
+                      },
+                    ]}
+                    onPress={() =>
+                      changeDrawingData('color', colors.darkYellow)
+                    }
+                  />
+                </View>
+              </View>
+            )}
           </View>
-          <TouchableOpacity onPress={() => {}} style={styles.btnContainer}>
+          <TouchableOpacity onPress={addNewComment} style={styles.btnContainer}>
             <Text style={{ color: colors.white }}>{texts.comment}</Text>
           </TouchableOpacity>
         </View>

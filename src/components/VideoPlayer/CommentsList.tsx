@@ -2,25 +2,30 @@ import { View, Text, Image, TouchableOpacity } from 'react-native';
 import React from 'react';
 import { FlatList } from 'react-native-gesture-handler';
 import Entypo from 'react-native-vector-icons/Entypo';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
 import { texts } from '../../const/Text';
-import { commentsData } from '../../const/Data';
 import { timeHhMm, timeMmSs } from '../../util/Time';
 import { colors } from '../../const/Colors';
 import styles from '../../styles/VideoPlayerStyles';
 import { CommentsListProps } from '../../modal/VideoPlayer';
+import { images } from '../../const/images';
 
-const CommentsList: React.FC<CommentsListProps> = ({ moveVideoPosition }) => {
+const CommentsList: React.FC<CommentsListProps> = ({
+  moveVideoPosition,
+  commentsList,
+  deleteComment,
+}) => {
   return (
     <View style={styles.commentsListContainer}>
       <View style={styles.commentsContainer}>
         <Text>{texts.comments}</Text>
         <View style={styles.lengthText}>
-          <Text>{commentsData.length}</Text>
+          <Text>{commentsList.length}</Text>
         </View>
       </View>
       <FlatList
-        data={commentsData}
+        data={commentsList}
         keyExtractor={item => item.id.toString()}
         showsVerticalScrollIndicator={false}
         style={{ height: '35%' }}
@@ -33,30 +38,34 @@ const CommentsList: React.FC<CommentsListProps> = ({ moveVideoPosition }) => {
           <View style={styles.commentBox}>
             <View style={styles.primaryNameContainer}>
               <View style={styles.secondaryNameContainer}>
-                <Image source={{ uri: item.profileUrl }} style={styles.image} />
-                <Text style={{ fontWeight: 'bold' }}>{item.name}</Text>
+                <Image source={images.testUser} style={styles.image} />
+                <Text style={{ fontWeight: 'bold' }}>{texts.testUser}</Text>
                 <Entypo name="dot-single" size={20} color={colors.gray} />
                 <Text style={styles.cmdTime}>
                   {timeHhMm(item.cmdTime).toUpperCase()}
                 </Text>
               </View>
-              <Entypo
-                name="dots-three-horizontal"
-                size={20}
-                color={colors.gray}
-              />
+              <TouchableOpacity onPress={() => deleteComment(item.id)}>
+                <MaterialIcons
+                  name="delete-outline"
+                  size={22}
+                  color={colors.gray}
+                  style={{ padding: 5 }}
+                />
+              </TouchableOpacity>
             </View>
             <View style={styles.cmdContainer}>
               <TouchableOpacity
-                onPress={() => moveVideoPosition(timeMmSs(item.timestamp))}
+                onPress={() =>
+                  moveVideoPosition(item.id, timeMmSs(item.timestamp))
+                }
               >
                 <Text style={styles.timeStamp}>{item.timestamp}</Text>
               </TouchableOpacity>
-              <Text>{item.comment}</Text>
-            </View>
-            <View style={styles.thirdContainer}>
-              <Entypo name="emoji-happy" size={20} color={colors.gray} />
-              <Text style={{ color: colors.green }}>{texts.reply}</Text>
+              {item.drawing && (
+                <MaterialIcons name="draw" size={20} color={colors.gray} />
+              )}
+              <Text>{item.command}</Text>
             </View>
           </View>
         )}

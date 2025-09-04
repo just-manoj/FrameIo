@@ -3,12 +3,18 @@ import { colors } from '../const/Colors';
 
 export default StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.white },
+  playerContainer: { alignItems: 'center', flex: 0 },
   videoPlayer: {
     marginTop: 50,
     backgroundColor: colors.white,
     borderTopLeftRadius: 10,
     borderTopRightRadius: 10,
     overflow: 'hidden',
+  },
+  drawerContainer: {
+    position: 'absolute',
+    zIndex: 1,
+    backgroundColor: 'transparent',
   },
   player: {
     height: '100%',
@@ -82,7 +88,8 @@ export default StyleSheet.create({
     padding: 10,
     backgroundColor: colors.whity,
     justifyContent: 'flex-start',
-    flex: 0.3,
+    flex: 0.2,
+    gap: 10,
   },
   commentInput: {
     width: '100%',
@@ -90,6 +97,7 @@ export default StyleSheet.create({
     fontSize: 16,
     flex: 1,
     marginRight: 10,
+    maxHeight: 60,
   },
   secondaryInputContainer: { alignItems: 'center', width: '100%' },
   subThirdContainer: {
@@ -116,5 +124,11 @@ export default StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 15,
     borderRadius: 5,
+  },
+  colorBox: {
+    width: 25,
+    height: 25,
+    elevation: 3,
+    borderColor: colors.black,
   },
 });

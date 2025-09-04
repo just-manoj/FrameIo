@@ -1,13 +1,15 @@
 import { View, Text, Dimensions, TouchableOpacity } from 'react-native';
-import React from 'react';
+import React, { useState } from 'react';
 import Video from 'react-native-video';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Fontisto from 'react-native-vector-icons/Fontisto';
+import { Svg, Path } from 'react-native-svg';
 
 import styles from '../../styles/VideoPlayerStyles';
-import sample from '../../assets/video/Sample.mp4';
+import Sample from '../../assets/video/Sample.mp4';
 import { PlayerProps } from '../../modal/VideoPlayer';
+import { GestureResponderEvent } from 'react-native/types_generated/index';
 
 const Player: React.FC<PlayerProps> = ({
   videoPlayer,
@@ -16,14 +18,71 @@ const Player: React.FC<PlayerProps> = ({
   changeVideoHeight,
   managePlayerDurationHandler,
   manageControlsHandler,
+  changeDrawingData,
+  drawingData,
 }) => {
   const screenWidth = Dimensions.get('window').width;
+  const onTouchMove = (event: GestureResponderEvent) => {
+    if (!playerControl.canDraw) {
+      return;
+    }
+    const currentPath = [...drawingData.tempPath];
+    const locationX = event.nativeEvent.locationX;
+    const locationY = event.nativeEvent.locationY;
+    const newPoint = `${currentPath.length <= 0 ? 'M' : ''}${locationX.toFixed(
+      0,
+    )},${locationY.toFixed(0)}`;
+    currentPath.push(newPoint);
+    changeDrawingData('temp', currentPath);
+  };
+
+  const onTouchEnd = () => {
+    if (!playerControl.canDraw) {
+      return;
+    }
+    changeDrawingData('path', drawingData.tempPath);
+    changeDrawingData('temp', []);
+  };
 
   return (
-    <View style={{ alignItems: 'center', flex: 0 }}>
+    <View style={styles.playerContainer}>
+      {!playerControl.isPlaying && playerControl.canDisplay && (
+        <View
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
+          style={[
+            styles.videoPlayer,
+            styles.drawerContainer,
+            {
+              height: videoHeight,
+              width: screenWidth * 0.9,
+            },
+          ]}
+        >
+          <Svg>
+            <Path
+              d={drawingData.path.join(' ')}
+              stroke={drawingData.colorCode}
+              fill={'transparent'}
+              strokeWidth={1.5}
+              strokeLinejoin="round"
+              strokeLinecap="round"
+            ></Path>
+            <Path
+              key={'temp'}
+              d={drawingData.tempPath.join(' ')}
+              stroke={drawingData.colorCode}
+              fill={'transparent'}
+              strokeWidth={1.5}
+              strokeLinejoin="round"
+              strokeLinecap="round"
+            ></Path>
+          </Svg>
+        </View>
+      )}
       <Video
         ref={videoPlayer}
-        source={sample}
+        source={Sample}
         style={[
           styles.videoPlayer,
           {
