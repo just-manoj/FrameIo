@@ -16,6 +16,7 @@ export interface DrawingData {
 }
 
 export interface PlayerControl {
+  movement: boolean;
   isPlaying: boolean;
   isMuted: boolean;
   isFullScreen: boolean;
@@ -33,8 +34,8 @@ export interface PlayerProps {
   playerControl: PlayerControl;
   changeVideoHeight: (height: number) => void;
   managePlayerDurationHandler: (
-    field: 'total' | 'current',
-    value: number,
+    field: 'total' | 'current' | 'movement',
+    value: number | boolean,
   ) => void;
   manageControlsHandler: (
     control: 'play' | 'mute' | 'fullScreen' | 'finish',
@@ -42,6 +43,7 @@ export interface PlayerProps {
   ) => void;
   drawingData: { path: string[]; tempPath: string[]; colorCode: string };
   changeDrawingData: (type: 'path' | 'temp', value: string[]) => void;
+  moveVideoPosition: (commandId: number | null, position: number) => void;
 }
 
 export interface CommentsListProps {

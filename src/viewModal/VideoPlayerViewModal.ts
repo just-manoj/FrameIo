@@ -20,6 +20,7 @@ const VideoPlayerViewModal = () => {
   const dbConnection = useRef<SQLiteDatabase | null>(null);
 
   const [playerControl, setPlayerControl] = useState<PlayerControl>({
+    movement: false,
     isPlaying: false,
     isMuted: false,
     isFullScreen: false,
@@ -105,8 +106,8 @@ const VideoPlayerViewModal = () => {
   };
 
   const managePlayerDurationHandler = (
-    field: 'total' | 'current',
-    value: number,
+    field: 'total' | 'current' | 'movement',
+    value: number | boolean,
   ) => {
     setPlayerControl(prevState => {
       switch (field) {
@@ -119,6 +120,13 @@ const VideoPlayerViewModal = () => {
           };
         case 'current':
           return { ...prevState, currentTime: value };
+        case 'movement':
+          setDrawingData({
+            path: [],
+            tempPath: [],
+            colorCode: drawingData.colorCode,
+          });
+          return { ...prevState, movement: value };
         default:
           return prevState;
       }

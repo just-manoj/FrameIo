@@ -20,12 +20,12 @@ export const secToMin = (t: number) => {
   if (!t || t < 0) {
     return '00:00';
   }
-  const min = Math.floor(t / 60);
-  const sec = t % 60;
+  const s = Math.round(t);
+  const min = Math.floor(s / 60);
+  const sec = s % 60;
 
   const mm = String(min).padStart(2, '0');
   const ss = String(sec).padStart(2, '0');
-
   return `${mm}:${ss}`;
 };
 

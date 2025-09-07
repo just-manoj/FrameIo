@@ -88,7 +88,7 @@ export default StyleSheet.create({
     padding: 10,
     backgroundColor: colors.whity,
     justifyContent: 'flex-start',
-    flex: 0.2,
+    flex: 0.3,
     gap: 10,
   },
   commentInput: {

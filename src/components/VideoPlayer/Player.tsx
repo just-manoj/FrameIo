@@ -20,6 +20,7 @@ const Player: React.FC<PlayerProps> = ({
   manageControlsHandler,
   changeDrawingData,
   drawingData,
+  moveVideoPosition,
 }) => {
   const screenWidth = Dimensions.get('window').width;
   const onTouchMove = (event: GestureResponderEvent) => {
@@ -42,6 +43,25 @@ const Player: React.FC<PlayerProps> = ({
     }
     changeDrawingData('path', drawingData.tempPath);
     changeDrawingData('temp', []);
+  };
+
+  const onTouchMovement = (event: GestureResponderEvent) => {
+    if (playerControl.canDraw) {
+      return;
+    }
+    if (!playerControl.movement) {
+      managePlayerDurationHandler('movement', true);
+    }
+    const barWidth = screenWidth * 0.9;
+    const { locationX } = event.nativeEvent;
+    const posX = Math.max(0, Math.min(barWidth, locationX));
+    const percentage = posX / barWidth;
+    const newTime = percentage * playerControl.totalDuration;
+    moveVideoPosition(null, +newTime.toFixed(1));
+  };
+
+  const onTouchMovementEnd = () => {
+    managePlayerDurationHandler('movement', false);
   };
 
   return (
@@ -80,6 +100,29 @@ const Player: React.FC<PlayerProps> = ({
           </Svg>
         </View>
       )}
+      {!playerControl.canDraw && (
+        <View
+          onTouchMove={onTouchMovement}
+          onTouchEnd={onTouchMovementEnd}
+          style={[
+            styles.videoPlayer,
+            styles.drawerContainer,
+            {
+              height: videoHeight,
+              width: screenWidth * 0.9,
+              alignItems: 'center',
+              justifyContent: 'center',
+              paddingBottom: 20,
+            },
+          ]}
+        >
+          {playerControl.movement && (
+            <Text style={{ color: 'white', fontSize: 40, elevation: 2 }}>{`${
+              playerControl.currentTime
+            } / ${playerControl.totalDuration.toFixed(1)}`}</Text>
+          )}
+        </View>
+      )}
       <Video
         ref={videoPlayer}
         source={Sample}
@@ -95,6 +138,7 @@ const Player: React.FC<PlayerProps> = ({
         repeat={false}
         controls={false}
         resizeMode="cover"
+        progressUpdateInterval={5}
         onLoad={data => {
           const { width, height } = data.naturalSize;
           if (width && height) {
@@ -107,7 +151,9 @@ const Player: React.FC<PlayerProps> = ({
           console.log('Video error:', e);
         }}
         onProgress={data => {
-          managePlayerDurationHandler('current', data.currentTime);
+          if (!playerControl.movement) {
+            managePlayerDurationHandler('current', data.currentTime);
+          }
         }}
         onEnd={() => manageControlsHandler('finish', true)}
       />
