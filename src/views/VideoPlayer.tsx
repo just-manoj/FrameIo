@@ -1,4 +1,4 @@
-import { View, StatusBar, KeyboardAvoidingView, Platform } from 'react-native';
+import { StatusBar, KeyboardAvoidingView, Platform } from 'react-native';
 import React, { useEffect } from 'react';
 
 import styles from '../styles/VideoPlayerStyles';
@@ -6,7 +6,6 @@ import VideoPlayerViewModal from '../viewModal/VideoPlayerViewModal';
 import Player from '../components/VideoPlayer/Player';
 import CommentsList from '../components/VideoPlayer/CommentsList';
 import CommentInput from '../components/VideoPlayer/CommentInput';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 const VideoPlayer = () => {
   const views = VideoPlayerViewModal();
@@ -27,6 +26,8 @@ const VideoPlayer = () => {
         moveVideoPosition={views.moveVideoPosition}
         commentsList={views.commentsList}
         deleteComment={views.deleteComment}
+        changeAnchorCmdHandler={views.changeAnchorCmdHandler}
+        manageControlsHandler={views.manageControlsHandler}
       />
       <CommentInput
         totaltimeStamp={views.playerControl.totaltimeStamp}

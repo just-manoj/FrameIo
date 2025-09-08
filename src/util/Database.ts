@@ -3,7 +3,7 @@ import {
   openDatabase,
   SQLiteDatabase,
 } from 'react-native-sqlite-storage';
-import { CommentData, DrawingData } from '../modal/VideoPlayer';
+import { AnchorComment, CommentData, DrawingData } from '../modal/VideoPlayer';
 
 enablePromise(true);
 
@@ -35,9 +35,20 @@ export const createTables = async (db: SQLiteDatabase) => {
       points TEXT
    )
   `;
+  const anchoredCmdQuery = `
+   CREATE TABLE IF NOT EXISTS Anchor (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      cmdTime TEXT,
+      colorCode TEXT,
+      x TEXT,
+      y TEXT,
+      comment TEXT
+   )
+  `;
   try {
     await db.executeSql(commentsQuery);
     await db.executeSql(drawingQuery);
+    await db.executeSql(anchoredCmdQuery);
   } catch (error) {
     console.error(error);
     throw Error(`Failed to create tables`);
@@ -101,6 +112,32 @@ const getDrawingdataDb = async (
   }
 };
 
+export const geAllAnchorCommentsDb = async (
+  db: SQLiteDatabase,
+): Promise<AnchorComment[]> => {
+  try {
+    const anchorComments: AnchorComment[] = [];
+    const results = await db.executeSql('SELECT * FROM Anchor');
+    results?.forEach(async result => {
+      for (let index = 0; index < result.rows.length; index++) {
+        const res = result.rows.item(index);
+        anchorComments.push({
+          id: res.id,
+          timeStamp: res.cmdTime,
+          command: res.comment,
+          colorCode: res.colorCode,
+          x: res.x,
+          y: res.y,
+        });
+      }
+    });
+    return anchorComments;
+  } catch (error) {
+    console.error(error);
+    return [];
+  }
+};
+
 export const addCommand = async (db: SQLiteDatabase, command: CommentData) => {
   let insertDrawingId = -1;
   if (command.drawing?.points && command.drawing?.points.length > 0) {
@@ -131,6 +168,28 @@ export const addCommand = async (db: SQLiteDatabase, command: CommentData) => {
     command.command,
     insertDrawingId,
   ];
+  try {
+    return db.executeSql(insertQuery, values);
+  } catch (error) {
+    console.log(error);
+    throw Error('Failed to add contact');
+  }
+};
+
+export const addAnchorCommand = async (
+  db: SQLiteDatabase,
+  command: AnchorComment,
+) => {
+  const insertQuery = `
+     INSERT INTO Anchor (cmdTime,colorCode,x,y,comment) VALUES (?, ?, ?, ?, ?);`;
+  const values = [
+    command.timeStamp,
+    command.colorCode,
+    command.x,
+    command.y,
+    command.command,
+  ];
+
   try {
     return db.executeSql(insertQuery, values);
   } catch (error) {

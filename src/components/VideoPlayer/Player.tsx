@@ -1,6 +1,7 @@
 import { View, Text, Dimensions, TouchableOpacity } from 'react-native';
-import React, { useState } from 'react';
+import React from 'react';
 import Video from 'react-native-video';
+import { GestureResponderEvent } from 'react-native/types_generated/index';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Fontisto from 'react-native-vector-icons/Fontisto';
@@ -9,7 +10,9 @@ import { Svg, Path } from 'react-native-svg';
 import styles from '../../styles/VideoPlayerStyles';
 import Sample from '../../assets/video/Sample.mp4';
 import { PlayerProps } from '../../modal/VideoPlayer';
-import { GestureResponderEvent } from 'react-native/types_generated/index';
+import { colors } from '../../const/Colors';
+import { timeMmSs } from '../../util/Time';
+import ArchorComment from './ArchorComment';
 
 const Player: React.FC<PlayerProps> = ({
   videoPlayer,
@@ -21,8 +24,15 @@ const Player: React.FC<PlayerProps> = ({
   changeDrawingData,
   drawingData,
   moveVideoPosition,
+  changeAnchorCmdHandler,
+  anchorCommentsData,
+  addNewAnchorComment,
+  anchorCommentsList,
+  changeCommentBoxSize,
+  commentBoxSize,
 }) => {
   const screenWidth = Dimensions.get('window').width;
+
   const onTouchMove = (event: GestureResponderEvent) => {
     if (!playerControl.canDraw) {
       return;
@@ -64,8 +74,21 @@ const Player: React.FC<PlayerProps> = ({
     managePlayerDurationHandler('movement', false);
   };
 
+  const onTouchAnchorEnd = (event: GestureResponderEvent) => {
+    if (anchorCommentsData.x > -1 || anchorCommentsData.y > -1) {
+      return;
+    }
+    const locationX = event.nativeEvent.locationX;
+    const locationY = event.nativeEvent.locationY;
+    changeAnchorCmdHandler('enablePoint', false);
+    changeAnchorCmdHandler('x', locationX);
+    changeAnchorCmdHandler('y', locationY);
+    managePlayerDurationHandler('movement', false);
+  };
+
   return (
     <View style={styles.playerContainer}>
+      {/* drawing */}
       {!playerControl.isPlaying && playerControl.canDisplay && (
         <View
           onTouchMove={onTouchMove}
@@ -100,6 +123,7 @@ const Player: React.FC<PlayerProps> = ({
           </Svg>
         </View>
       )}
+      {/* finger movement */}
       {!playerControl.canDraw && (
         <View
           onTouchMove={onTouchMovement}
@@ -107,22 +131,27 @@ const Player: React.FC<PlayerProps> = ({
           style={[
             styles.videoPlayer,
             styles.drawerContainer,
-            {
-              height: videoHeight,
-              width: screenWidth * 0.9,
-              alignItems: 'center',
-              justifyContent: 'center',
-              paddingBottom: 20,
-            },
+            styles.fingerMovementContainer,
+            { height: videoHeight, width: screenWidth * 0.9 },
           ]}
-        >
-          {playerControl.movement && (
-            <Text style={{ color: 'white', fontSize: 40, elevation: 2 }}>{`${
-              playerControl.currentTime
-            } / ${playerControl.totalDuration.toFixed(1)}`}</Text>
-          )}
-        </View>
+        />
       )}
+      {/* anchor comments */}
+      {!playerControl.canDraw &&
+        !playerControl.isPlaying &&
+        playerControl.anchorEnabled && (
+          <ArchorComment
+            onTouchAnchorEnd={onTouchAnchorEnd}
+            screenWidth={screenWidth}
+            videoHeight={videoHeight}
+            anchorCommentsData={anchorCommentsData}
+            commentBoxSize={commentBoxSize}
+            changeCommentBoxSize={changeCommentBoxSize}
+            changeAnchorCmdHandler={changeAnchorCmdHandler}
+            playerControl={playerControl}
+            addNewAnchorComment={addNewAnchorComment}
+          />
+        )}
       <Video
         ref={videoPlayer}
         source={Sample}
@@ -175,6 +204,59 @@ const Player: React.FC<PlayerProps> = ({
           ]}
         />
       </View>
+      <View
+        style={[
+          styles.anchorIconContainer,
+          {
+            width: screenWidth * 0.9,
+          },
+        ]}
+      >
+        {anchorCommentsList.map((cmd, index) => {
+          const sec = timeMmSs(cmd.timeStamp);
+          const barWidth = screenWidth * 0.9;
+
+          let left = (sec / playerControl.totalDuration) * barWidth - 17 / 2;
+
+          if (left > barWidth) {
+            left = barWidth;
+          }
+
+          return (
+            <TouchableOpacity
+              onPress={() => {
+                manageControlsHandler('canDraw', false);
+                manageControlsHandler('canDisplay', false);
+                moveVideoPosition(null, sec);
+                changeAnchorCmdHandler('enablePoint', false);
+                changeAnchorCmdHandler('x', cmd.x);
+                changeAnchorCmdHandler('y', cmd.y);
+                changeAnchorCmdHandler('colorCode', cmd.colorCode);
+                changeAnchorCmdHandler('id', cmd.id);
+                changeAnchorCmdHandler('command', cmd.command);
+                changeAnchorCmdHandler('timeStamp', cmd.timeStamp);
+                managePlayerDurationHandler('movement', false);
+                manageControlsHandler('anchorEnabled', true);
+              }}
+              key={index}
+              style={{
+                position: 'absolute',
+                left,
+              }}
+            >
+              <Ionicons
+                name={
+                  anchorCommentsData.id === cmd.id
+                    ? 'location'
+                    : 'location-outline'
+                }
+                size={17}
+                color="white"
+              />
+            </TouchableOpacity>
+          );
+        })}
+      </View>
       <View style={[styles.controlsContainer, { width: screenWidth * 0.9 }]}>
         <View style={styles.secondaryControls}>
           <TouchableOpacity
@@ -200,19 +282,61 @@ const Player: React.FC<PlayerProps> = ({
             />
           </TouchableOpacity>
         </View>
-        <TouchableOpacity
-          onPress={() =>
-            manageControlsHandler('fullScreen', !playerControl.isFullScreen)
-          }
-        >
-          <MaterialIcons
-            name={
-              playerControl.isFullScreen ? 'close-fullscreen' : 'open-in-full'
+        <Text style={styles.timerText}>
+          {`${String(Math.floor(playerControl.currentTime / 60)).padStart(
+            2,
+            '0',
+          )}:${String(Math.floor(playerControl.currentTime % 60)).padStart(
+            2,
+            '0',
+          )} / ${String(Math.floor(playerControl.totalDuration / 60)).padStart(
+            2,
+            '0',
+          )}:${String(Math.floor(playerControl.totalDuration % 60)).padStart(
+            2,
+            '0',
+          )}`}
+        </Text>
+        <View style={styles.anchorFullScreenContainer}>
+          <TouchableOpacity
+            onPress={() => {
+              manageControlsHandler('play', false);
+              manageControlsHandler(
+                'anchorEnabled',
+                !playerControl.anchorEnabled,
+              );
+              changeAnchorCmdHandler('enablePoint', true);
+              changeAnchorCmdHandler('x', -1);
+              changeAnchorCmdHandler('y', -1);
+              changeAnchorCmdHandler('id', -1);
+              changeAnchorCmdHandler('colorCode', colors.yellow);
+              changeAnchorCmdHandler('command', '');
+              manageControlsHandler('canDraw', false);
+              manageControlsHandler('canDisplay', false);
+            }}
+          >
+            <Ionicons
+              name={
+                playerControl.anchorEnabled ? 'location' : 'location-outline'
+              }
+              size={27}
+              color="white"
+            />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() =>
+              manageControlsHandler('fullScreen', !playerControl.isFullScreen)
             }
-            size={27}
-            color="white"
-          />
-        </TouchableOpacity>
+          >
+            <MaterialIcons
+              name={
+                playerControl.isFullScreen ? 'close-fullscreen' : 'open-in-full'
+              }
+              size={27}
+              color="white"
+            />
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );

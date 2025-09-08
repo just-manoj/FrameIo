@@ -7,4 +7,5 @@ export const texts = {
   testUser: 'Test user',
   validation: 'validation',
   validationMsg: 'You must either add a message or draw something',
+  validationMsg2: 'You must add a message and anchor the comment',
 };

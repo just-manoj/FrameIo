@@ -2,13 +2,20 @@ import React, { useRef, useState } from 'react';
 import type { VideoRef } from 'react-native-video';
 import { SQLiteDatabase } from 'react-native-sqlite-storage';
 
-import { CommentData, PlayerControl } from '../modal/VideoPlayer';
+import {
+  AnchorComment,
+  AnchorCommentsData,
+  CommentData,
+  PlayerControl,
+} from '../modal/VideoPlayer';
 import { generateTimeStamp, secToMin, timeMmSs } from '../util/Time';
 import {
+  addAnchorCommand,
   addCommand,
   connectToDatabase,
   createTables,
   deleteCommentDb,
+  geAllAnchorCommentsDb,
   geAllCommentsDb,
 } from '../util/Database';
 import { colors } from '../const/Colors';
@@ -30,6 +37,7 @@ const VideoPlayerViewModal = () => {
     totaltimeStamp: [],
     canDraw: false,
     canDisplay: true,
+    anchorEnabled: false,
   });
   const [videoHeight, setVideoHeight] = useState(200);
   const [commentData, setCommentData] = useState<{
@@ -46,6 +54,30 @@ const VideoPlayerViewModal = () => {
     colorCode: colors.white,
   });
   const [commentsList, setCommentsList] = useState<CommentData[]>([]);
+  const [anchorCommentsList, setAnchorCommentsList] = useState<AnchorComment[]>(
+    [],
+  );
+  const [anchorCommentsData, setAnchorCommentsData] =
+    useState<AnchorCommentsData>({
+      id: -1,
+      timeStamp: '00:00',
+      x: -1,
+      y: -1,
+      command: '',
+      colorCode: colors.yellow,
+      enablePoint: false,
+    });
+  const [commentBoxSize, setCommentBoxSize] = useState({
+    width: 0,
+    height: 0,
+  });
+
+  const changeCommentBoxSize = (width: number, height: number) => {
+    setCommentBoxSize(() => ({
+      height: height,
+      width: width,
+    }));
+  };
 
   const changeVideoHeight = (height: number) => {
     setVideoHeight(height);
@@ -58,7 +90,8 @@ const VideoPlayerViewModal = () => {
       | 'fullScreen'
       | 'finish'
       | 'canDraw'
-      | 'canDisplay',
+      | 'canDisplay'
+      | 'anchorEnabled',
     value: boolean,
   ) => {
     setPlayerControl(prevState => {
@@ -67,6 +100,7 @@ const VideoPlayerViewModal = () => {
           if (prevState.finish) {
             moveVideoPosition(null, 0);
           }
+          changeAnchorCmdHandler('enablePoint', false);
           if (!value) {
             onChangeCommentHandler(
               'timestamp',
@@ -76,12 +110,14 @@ const VideoPlayerViewModal = () => {
             changeDrawingData('color', colors.black);
           }
           setDrawingData(prev => ({ ...prev, path: [], tempPath: [] }));
+          changeAnchorCmdHandler('enablePoint', false);
           return {
             ...prevState,
             isPlaying: value,
             finish: prevState.finish ? false : prevState.finish,
             canDisplay: !value,
             canDraw: value === true ? false : prevState.canDraw,
+            anchorEnabled: false,
           };
         case 'mute':
           return { ...prevState, isMuted: value };
@@ -99,6 +135,8 @@ const VideoPlayerViewModal = () => {
           return { ...prevState, canDraw: value };
         case 'canDisplay':
           return { ...prevState, canDisplay: value };
+        case 'anchorEnabled':
+          return { ...prevState, anchorEnabled: value, isPlaying: false };
         default:
           return prevState;
       }
@@ -112,6 +150,9 @@ const VideoPlayerViewModal = () => {
     setPlayerControl(prevState => {
       switch (field) {
         case 'total':
+          if (typeof value !== 'number') {
+            return prevState;
+          }
           const totaltimeStamp = generateTimeStamp(Math.round(value));
           return {
             ...prevState,
@@ -215,6 +256,7 @@ const VideoPlayerViewModal = () => {
       dbConnection.current = db;
       await createTables(db);
       getAllCommentsData(db);
+      getAllAnchorCommentsData(db);
     } catch (error) {
       console.error(error);
     }
@@ -272,6 +314,73 @@ const VideoPlayerViewModal = () => {
     setCommentsList(() => res);
   };
 
+  const changeAnchorCmdHandler = (
+    field:
+      | 'timeStamp'
+      | 'x'
+      | 'y'
+      | 'command'
+      | 'colorCode'
+      | 'enablePoint'
+      | 'id',
+    value: number | string | boolean,
+  ) => {
+    setAnchorCommentsData(prev => ({
+      ...prev,
+      [field]: value,
+    }));
+    if (field === 'enablePoint' && value) {
+      changeAnchorCmdHandler(
+        'timeStamp',
+        secToMin(+playerControl.currentTime.toFixed(0)),
+      );
+    }
+  };
+
+  const getAllAnchorCommentsData = async (db: SQLiteDatabase | null) => {
+    if (!db) {
+      console.error('Database connection is not established.');
+      return;
+    }
+    const res = await geAllAnchorCommentsDb(db);
+    setAnchorCommentsList(() => res);
+  };
+
+  const addNewAnchorComment = async () => {
+    if (
+      anchorCommentsData.command === '' ||
+      anchorCommentsData.x <= 0 ||
+      anchorCommentsData.y <= 0
+    ) {
+      return Alert.alert(texts.validation, texts.validationMsg);
+    }
+    if (!dbConnection.current) {
+      console.error('Database connection is not established.');
+      return;
+    }
+    const result = await addAnchorCommand(dbConnection.current, {
+      id: -1,
+      timeStamp: anchorCommentsData.timeStamp,
+      command: anchorCommentsData.command,
+      colorCode: anchorCommentsData.colorCode,
+      x: anchorCommentsData.x,
+      y: anchorCommentsData.y,
+    });
+    if (result[0].insertId) {
+      getAllAnchorCommentsData(dbConnection.current);
+      setAnchorCommentsData(() => ({
+        colorCode: colors.green,
+        command: '',
+        enablePoint: false,
+        id: -1,
+        timeStamp: '00:01',
+        x: -1,
+        y: -1,
+      }));
+      manageControlsHandler('anchorEnabled', false);
+    }
+  };
+
   return {
     playerControl,
     videoHeight,
@@ -288,6 +397,13 @@ const VideoPlayerViewModal = () => {
     addNewComment,
     commentsList,
     deleteComment,
+    changeAnchorCmdHandler,
+    anchorCommentsData,
+    getAllAnchorCommentsData,
+    addNewAnchorComment,
+    anchorCommentsList,
+    commentBoxSize,
+    changeCommentBoxSize,
   };
 };
 

@@ -15,6 +15,8 @@ const CommentsList: React.FC<CommentsListProps> = ({
   moveVideoPosition,
   commentsList,
   deleteComment,
+  changeAnchorCmdHandler,
+  manageControlsHandler,
 }) => {
   return (
     <View style={styles.commentsListContainer}>
@@ -56,9 +58,12 @@ const CommentsList: React.FC<CommentsListProps> = ({
             </View>
             <View style={styles.cmdContainer}>
               <TouchableOpacity
-                onPress={() =>
-                  moveVideoPosition(item.id, timeMmSs(item.timestamp))
-                }
+                onPress={() => {
+                  moveVideoPosition(item.id, timeMmSs(item.timestamp));
+                  manageControlsHandler('anchorEnabled', false);
+                  changeAnchorCmdHandler('enablePoint', false);
+                  changeAnchorCmdHandler('id', -1);
+                }}
               >
                 <Text style={styles.timeStamp}>{item.timestamp}</Text>
               </TouchableOpacity>

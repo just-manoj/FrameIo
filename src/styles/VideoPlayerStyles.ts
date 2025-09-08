@@ -64,8 +64,8 @@ export default StyleSheet.create({
     gap: 5,
   },
   image: {
-    width: 40,
-    height: 40,
+    width: 35,
+    height: 35,
     borderRadius: 20,
     marginRight: 10,
   },
@@ -130,5 +130,24 @@ export default StyleSheet.create({
     height: 25,
     elevation: 3,
     borderColor: colors.black,
+  },
+  fingerMovementContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingBottom: 20,
+  },
+  dotCircle: { width: 10, height: 10, borderRadius: 5 },
+  anchorCommand: { backgroundColor: 'white', width: '65%' },
+  dropDownContainer2: { width: 90 },
+  anchorIconContainer: {
+    backgroundColor: colors.black,
+    height: 20,
+    position: 'relative',
+  },
+  timerText: { color: 'white', fontSize: 20, elevation: 2 },
+  anchorFullScreenContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 20,
   },
 });
