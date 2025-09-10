@@ -1,0 +1,88 @@
+name: FrameIo Build
+
+on:
+  push:
+    branches:
+      - CICD
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Grant execute permission for Gradlew
+        run: chmod +x android/gradlew
+
+      - name: Build Android Release
+        run: |
+          cd android
+          ./gradlew clean
+          ./gradlew assembleRelease
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: android/app/build/outputs/apk/release/app-release.apk
+
+  ios:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Install CocoaPods
+        run: sudo gem install cocoapods
+
+      - name: Install Pods
+        run: |
+          cd ios
+          pod install --repo-update
+
+      - name: Build iOS Release
+        run: |
+          cd ios
+          xcodebuild \
+            -workspace FrameIo.xcworkspace \
+            -scheme FrameIo \
+            -sdk iphoneos \
+            -configuration Release \
+            archive -archivePath $PWD/build/FrameIo.xcarchive
+
+      - name: Export IPA
+        run: |
+          cd ios
+          xcodebuild -exportArchive \
+            -archivePath $PWD/build/FrameIo.xcarchive \
+            -exportOptionsPlist ExportOptions.plist \
+            -exportPath $PWD/build/ipa
+
+      - name: Upload iOS IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-ipa
+          path: ios/build/ipa
