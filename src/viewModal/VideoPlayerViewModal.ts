@@ -292,6 +292,8 @@ const VideoPlayerViewModal = () => {
         tempPath: [],
         colorCode: drawingData.colorCode,
       });
+      manageControlsHandler('canDisplay', false);
+      manageControlsHandler('canDraw', false);
     }
   };
 

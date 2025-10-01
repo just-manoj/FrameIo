@@ -1,11 +1,13 @@
 import { View, Text, Dimensions, TouchableOpacity } from 'react-native';
-import React from 'react';
+import React, { useRef } from 'react';
 import Video from 'react-native-video';
-import { GestureResponderEvent } from 'react-native/types_generated/index';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Fontisto from 'react-native-vector-icons/Fontisto';
 import { Svg, Path } from 'react-native-svg';
+import { GestureResponderEvent } from 'react-native';
+import { runOnJS } from 'react-native-reanimated';
 
 import styles from '../../styles/VideoPlayerStyles';
 import Sample from '../../assets/video/Sample.mp4';
@@ -32,28 +34,7 @@ const Player: React.FC<PlayerProps> = ({
   commentBoxSize,
 }) => {
   const screenWidth = Dimensions.get('window').width;
-
-  const onTouchMove = (event: GestureResponderEvent) => {
-    if (!playerControl.canDraw) {
-      return;
-    }
-    const currentPath = [...drawingData.tempPath];
-    const locationX = event.nativeEvent.locationX;
-    const locationY = event.nativeEvent.locationY;
-    const newPoint = `${currentPath.length <= 0 ? 'M' : ''}${locationX.toFixed(
-      0,
-    )},${locationY.toFixed(0)}`;
-    currentPath.push(newPoint);
-    changeDrawingData('temp', currentPath);
-  };
-
-  const onTouchEnd = () => {
-    if (!playerControl.canDraw) {
-      return;
-    }
-    changeDrawingData('path', drawingData.tempPath);
-    changeDrawingData('temp', []);
-  };
+  const tempPathRef = useRef<string[]>([]);
 
   const onTouchMovement = (event: GestureResponderEvent) => {
     if (playerControl.canDraw) {
@@ -86,13 +67,38 @@ const Player: React.FC<PlayerProps> = ({
     managePlayerDurationHandler('movement', false);
   };
 
+  const pan = Gesture.Pan()
+    .onStart(event => {
+      if (!playerControl.canDraw) return;
+      const { x, y } = event;
+      const newPoint = `${
+        tempPathRef.current.length <= 0 ? 'M' : ''
+      }${x.toFixed(0)},${y.toFixed(0)}`;
+      tempPathRef.current.push(newPoint);
+      runOnJS(changeDrawingData)('temp', [...tempPathRef.current]);
+    })
+    .onUpdate(event => {
+      if (!playerControl.canDraw) return;
+      const { x, y } = event;
+      const newPoint = `${
+        tempPathRef.current.length <= 0 ? 'M' : ''
+      }${x.toFixed(0)},${y.toFixed(0)}`;
+      tempPathRef.current.push(newPoint);
+      runOnJS(changeDrawingData)('temp', [...tempPathRef.current]);
+    })
+    .onEnd(() => {
+      if (!playerControl.canDraw) return;
+      runOnJS(changeDrawingData)('path', [...tempPathRef.current]);
+      tempPathRef.current = [];
+      runOnJS(changeDrawingData)('temp', []);
+    });
+
   return (
     <View style={styles.playerContainer}>
       {/* drawing */}
-      {!playerControl.isPlaying && playerControl.canDisplay && (
+      {((!playerControl.isPlaying && playerControl.canDisplay) ||
+        playerControl.canDraw) && (
         <View
-          onTouchMove={onTouchMove}
-          onTouchEnd={onTouchEnd}
           style={[
             styles.videoPlayer,
             styles.drawerContainer,
@@ -102,25 +108,27 @@ const Player: React.FC<PlayerProps> = ({
             },
           ]}
         >
-          <Svg>
-            <Path
-              d={drawingData.path.join(' ')}
-              stroke={drawingData.colorCode}
-              fill={'transparent'}
-              strokeWidth={1.5}
-              strokeLinejoin="round"
-              strokeLinecap="round"
-            ></Path>
-            <Path
-              key={'temp'}
-              d={drawingData.tempPath.join(' ')}
-              stroke={drawingData.colorCode}
-              fill={'transparent'}
-              strokeWidth={1.5}
-              strokeLinejoin="round"
-              strokeLinecap="round"
-            ></Path>
-          </Svg>
+          <GestureDetector gesture={pan}>
+            <Svg height={videoHeight} width={screenWidth * 0.9}>
+              <Path
+                d={drawingData.path.join(' ')}
+                stroke={drawingData.colorCode}
+                fill={'transparent'}
+                strokeWidth={1.5}
+                strokeLinejoin="round"
+                strokeLinecap="round"
+              ></Path>
+              <Path
+                key={'temp'}
+                d={drawingData.tempPath.join(' ')}
+                stroke={drawingData.colorCode}
+                fill={'transparent'}
+                strokeWidth={1.5}
+                strokeLinejoin="round"
+                strokeLinecap="round"
+              ></Path>
+            </Svg>
+          </GestureDetector>
         </View>
       )}
       {/* finger movement */}
@@ -215,9 +223,7 @@ const Player: React.FC<PlayerProps> = ({
         {anchorCommentsList.map((cmd, index) => {
           const sec = timeMmSs(cmd.timeStamp);
           const barWidth = screenWidth * 0.9;
-
           let left = (sec / playerControl.totalDuration) * barWidth - 17 / 2;
-
           if (left > barWidth) {
             left = barWidth;
           }
